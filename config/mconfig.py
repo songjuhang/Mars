@@ -16,7 +16,7 @@ class ModelConfig(object):
         self.annotationDir = None
         self.classList = None
         self.subsetMap = {}
-        self.dcore = 10
+        self.dcore = 5
         self.suffix = ".jpg"
 
         # model setup
@@ -38,7 +38,7 @@ class ModelConfig(object):
         self.maxEpoch = 200
         self.backboneFreezeEpochs = []
         self.distilEpochs = []
-        self.batchSize = 16
+        self.batchSize = 8
         self.optimizerType = "SGD"
         self.optimizerMomentum = 0.937
         self.optimizerWeightDecay = 5e-4
@@ -83,7 +83,7 @@ class ModelConfig(object):
     def finalize(self, tags):
         self.enrichTags(tags)
 
-        self.user = os.getenv("USER")
+        self.user = os.getenv("USERNAME")
         if self.user is None or len(self.user) == 0:
             raise ValueError("User not found")
         if self.root is None:
