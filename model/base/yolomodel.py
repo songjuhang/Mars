@@ -45,7 +45,7 @@ class YoloModel(nn.Module):
         self.mcfg = mcfg
         self.inferenceMode = False
 
-        # model layes
+        # model layers
         w, r, n = YoloModelPhaseSetup.getModelWRN(mcfg.phase)
         self.backbone = Backbone(w, r, n)
         self.neck = Neck(w, r, n)
@@ -64,6 +64,24 @@ class YoloModel(nn.Module):
         self.proj = torch.arange(self.mcfg.regMax, dtype=torch.float).to(self.mcfg.device)
         self.scaleTensor = torch.tensor(self.mcfg.inputShape, device=self.mcfg.device, dtype=torch.float)[[1, 0, 1, 0]]
 
+        # Initialize weights for training from scratch
+        self.initializeWeights()
+
+    def initializeWeights(self):
+        """Initialize model weights for training from scratch."""
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Linear):
+                nn.init.normal_(m.weight, 0, 0.01)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+
     def getTrainLoss(self):
         from train.loss import DetectionLoss
         return DetectionLoss(self.mcfg, self)
@@ -77,10 +95,14 @@ class YoloModel(nn.Module):
         return self
 
     def freezeBackbone(self):
-        raise NotImplementedError("YoloModel::freezeBackbone")
+        """Freeze backbone parameters for transfer learning"""
+        for param in self.backbone.parameters():
+            param.requires_grad = False
 
     def unfreezeBackbone(self):
-        raise NotImplementedError("YoloModel::unfreezeBackbone")
+        """Unfreeze backbone parameters"""
+        for param in self.backbone.parameters():
+            param.requires_grad = True
 
     def forward(self, x):
         if self.inferenceMode:
@@ -107,6 +129,10 @@ class YoloModel(nn.Module):
             log.inf("Yolo model state saved at {}".format(modelFile))
 
     def loadBackboneWeights(self, url):
+        if url is None:
+            log.grey("No pretrained backbone URL provided, using random initialization")
+            return
+            
         pretrainedState = torch.hub.load_state_dict_from_url(
             url=url,
             map_location="cpu",

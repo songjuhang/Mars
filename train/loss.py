@@ -59,7 +59,7 @@ class BboxLoss(nn.Module):
 class DetectionLoss(object):
     def __init__(self, mcfg, model):
         self.model = model
-        self.mcfg= mcfg
+        self.mcfg = mcfg
         self.layerStrides = model.layerStrides
         self.assigner = TaskAlignedAssigner(topk=self.mcfg.talTopk, num_classes=self.mcfg.nc, alpha=0.5, beta=6.0)
         self.bce = nn.BCEWithLogitsLoss(reduction="none")
@@ -97,17 +97,34 @@ class DetectionLoss(object):
         batchSize = preds[0].shape[0]
         no = self.mcfg.nc + self.mcfg.regMax * 4
 
-        # predictioin preprocess
+        # prediction preprocess
         predBoxDistribution, predClassScores = torch.cat([xi.view(batchSize, no, -1) for xi in preds], 2).split((self.mcfg.regMax * 4, self.mcfg.nc), 1)
-        predBoxDistribution = predBoxDistribution.permute(0, 2, 1).contiguous() # (batchSize, 80 * 80 + 40 * 40 + 20 * 20, regMax * 4)
-        predClassScores = predClassScores.permute(0, 2, 1).contiguous() # (batchSize, 80 * 80 + 40 * 40 + 20 * 20, nc)
+        predBoxDistribution = predBoxDistribution.permute(0, 2, 1).contiguous() # (batchSize, 80*80+40*40+20*20, regMax*4)
+        predClassScores = predClassScores.permute(0, 2, 1).contiguous() # (batchSize, 80*80+40*40+20*20, nc)
 
         # ground truth preprocess
         targets = self.preprocess(targets.to(self.mcfg.device), batchSize, scaleTensor=self.model.scaleTensor) # (batchSize, maxCount, 5)
         gtLabels, gtBboxes = targets.split((1, 4), 2)  # cls=(batchSize, maxCount, 1), xyxy=(batchSize, maxCount, 4)
         gtMask = gtBboxes.sum(2, keepdim=True).gt_(0.0)
 
-        raise NotImplementedError("DetectionLoss::__call__")
+        # bbox decode
+        predBboxes = bboxDecode(self.model.anchorPoints, predBoxDistribution, self.model.proj, xywh=False)
+
+        # assign anchors to ground truth
+        _, targetBboxes, targetScores, fgMask, _ = self.assigner(
+            predClassScores.detach().sigmoid(), predBboxes.detach() * self.model.anchorStrides,
+            self.model.anchorPoints * self.model.anchorStrides, gtLabels, gtBboxes, gtMask)
+
+        targetScores = targetScores.to(predClassScores.dtype)
+        targetScoresSum = max(targetScores.sum(), 1)
+
+        # classification loss
+        loss[1] = self.bce(predClassScores, targetScores.to(predClassScores.dtype)).sum() / targetScoresSum
+
+        # bbox loss
+        if fgMask.sum():
+            targetBboxes /= self.model.anchorStrides  # normalize by strides
+            loss[0], loss[2] = self.bboxLoss(predBoxDistribution, predBboxes, self.model.anchorPoints, targetBboxes, targetScores, targetScoresSum, fgMask)
 
         loss[0] *= self.mcfg.lossWeights[0]  # box
         loss[1] *= self.mcfg.lossWeights[1]  # cls
