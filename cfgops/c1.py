@@ -14,19 +14,19 @@ def mcfg(tags):
     mcfg.testSplitName = "test" # DO NOT MODIFY
 
     # data setup
-    mcfg.imageDir = "D:\\vscode\\Mars\\archive\\mar20\\images"
-    mcfg.annotationDir = "D:\\vscode\\Mars\\archive\\mar20\\annotations"
+    mcfg.imageDir = "./archive/mar20/images"
+    mcfg.annotationDir = "./archive/mar20/annotations"
     mcfg.classList = ["A{}".format(x) for x in range(1, 21)] # DO NOT MODIFY
     mcfg.subsetMap = { # DO NOT MODIFY
-        "train": "D:\\vscode\\Mars\\archive\\mar20\\splits\\v5\\train.txt",
-        "validation": "D:\\vscode\\Mars\\archive\\mar20\\splits\\v5\\validation.txt",
-        "test": "D:\\vscode\\Mars\\archive\\mar20\\splits\\v5\\test.txt",
-        "small": "D:\\vscode\\Mars\\archive\\mar20\\splits\\v5\\small.txt",
+        "train": "./archive/mar20/splits/v5/train.txt",
+        "validation": "./archive/mar20/splits/v5/validation.txt",
+        "test": "./archive/mar20/splits/v5/test.txt",
+        "small": "./archive/mar20/splits/v5/small.txt",
     }
 
     if "full" in tags:
         mcfg.modelName = "base"
-        mcfg.maxEpoch = 50
+        mcfg.maxEpoch = 200
         mcfg.backboneFreezeEpochs = [x for x in range(0, 100)]
 
     if "teacher" in tags:

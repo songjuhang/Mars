@@ -16,7 +16,7 @@ class ModelConfig(object):
         self.annotationDir = None
         self.classList = None
         self.subsetMap = {}
-        self.dcore = 5
+        self.dcore = 8
         self.suffix = ".jpg"
 
         # model setup
@@ -38,7 +38,7 @@ class ModelConfig(object):
         self.maxEpoch = 200
         self.backboneFreezeEpochs = []
         self.distilEpochs = []
-        self.batchSize = 8
+        self.batchSize = 32
         self.optimizerType = "SGD"
         self.optimizerMomentum = 0.937
         self.optimizerWeightDecay = 5e-4
@@ -52,8 +52,8 @@ class ModelConfig(object):
 
         # eval setup
         self.testSelectedClasses = None
-        self.minIou = 0.5
-        self.paintImages = False
+        self.minIou = 0.5 if self.cuda else 0.5  # GPU上更高IoU要求
+        self.paintImages = True
 
         # dataset splits
         self.trainSplitName = "train"
@@ -83,7 +83,7 @@ class ModelConfig(object):
     def finalize(self, tags):
         self.enrichTags(tags)
 
-        self.user = os.getenv("USERNAME")
+        self.user = os.getenv("USER")
         if self.user is None or len(self.user) == 0:
             raise ValueError("User not found")
         if self.root is None:
