@@ -27,18 +27,18 @@ def mcfg(tags):
     if "full" in tags:
         mcfg.modelName = "base"
         mcfg.maxEpoch = 200
-        mcfg.backboneFreezeEpochs = [x for x in range(0, 100)]
+        mcfg.backboneFreezeEpochs = [x for x in range(0, 5)]
 
     if "teacher" in tags:
         mcfg.modelName = "base"
         mcfg.maxEpoch = 200
-        mcfg.backboneFreezeEpochs = [x for x in range(0, 100)]
+        mcfg.backboneFreezeEpochs = [x for x in range(0, 5)]
         mcfg.trainSelectedClasses = ["A{}".format(x) for x in range(1, 11)] # DO NOT MODIFY
 
     if "distillation" in tags:
         mcfg.modelName = "distillation"
-        mcfg.checkpointModelFile = "/auto/mars/ame/c1.nano.teacher/__cache__/best_weights.pth"
-        mcfg.teacherModelFile = "/auto/mars/ame/c1.nano.teacher/__cache__/best_weights.pth"
+        mcfg.checkpointModelFile = "/workspace/mars12/root/c1.nano.teacher/__cache__/best_weights.pth"
+        mcfg.teacherModelFile = "/workspace/mars12/root/c1.nano.teacher/__cache__/best_weights.pth"
         mcfg.distilLossWeights = (1.0, 0.05, 0.001)
         mcfg.maxEpoch = 100
         mcfg.backboneFreezeEpochs = [x for x in range(0, 25)]

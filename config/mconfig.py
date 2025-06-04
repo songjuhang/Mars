@@ -10,6 +10,7 @@ class ModelConfig(object):
         self.seed = 859
         self.cuda = torch.cuda.is_available()
         self.device = torch.device("cuda" if self.cuda else "cpu")
+        # self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
         # data setup
         self.imageDir = None

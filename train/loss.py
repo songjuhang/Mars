@@ -112,8 +112,8 @@ class DetectionLoss(object):
         predBboxes = bboxDecode(self.model.anchorPoints, predBoxDistribution, self.model.proj, xywh=False)
 
         # assign anchors to ground truth
-        _, targetBboxes, targetScores, fgMask, _ = self.assigner(
-            predClassScores.detach().sigmoid(), predBboxes.detach() * self.model.anchorStrides,
+        _, targetBboxes, targetScores, fgMask, _ = self.assigner.forward(
+            predClassScores.detach().sigmoid(), (predBboxes.detach() * self.model.anchorStrides).type(gtBboxes.dtype),
             self.model.anchorPoints * self.model.anchorStrides, gtLabels, gtBboxes, gtMask)
 
         targetScores = targetScores.to(predClassScores.dtype)

@@ -42,6 +42,14 @@ class Backbone(nn.Module):
             feat2: (B, 512 * w, 40, 40) 
             feat3: (B, 512 * w * r, 20, 20)
         """
+        """
+        Input shape: (B, 3, 640, 640)
+        Output shape:
+            feat0: (B, 128 * w, 160, 160)
+            feat1: (B, 256 * w, 80, 80)
+            feat2: (B, 512 * w, 40, 40)
+            feat3: (B, 512 * w * r, 20, 20)
+        """
         # backbone
         feat0 = self.conv1(x)           # P1/2
         feat1 = self.c2f2(
@@ -58,4 +66,4 @@ class Backbone(nn.Module):
                 self.conv5(feat3)       # P5/32
             )
         )
-        return feat2, feat2, feat3, feat4
+        return feat1, feat2, feat3, feat4#问题

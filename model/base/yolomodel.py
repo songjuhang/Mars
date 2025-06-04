@@ -59,6 +59,9 @@ class YoloModel(nn.Module):
             (self.mcfg.nc + self.mcfg.regMax * 4, int(self.mcfg.inputShape[0] / 32), int(self.mcfg.inputShape[1] / 32)),
         )
         self.anchorPoints, self.anchorStrides = makeAnchors([x[-2:] for x in self.outputShapes], self.layerStrides, 0.5)
+
+
+
         self.anchorPoints = self.anchorPoints.to(self.mcfg.device)
         self.anchorStrides = self.anchorStrides.to(self.mcfg.device)
         self.proj = torch.arange(self.mcfg.regMax, dtype=torch.float).to(self.mcfg.device)
